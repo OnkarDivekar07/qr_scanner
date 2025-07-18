@@ -4,6 +4,7 @@ import { Html5Qrcode } from "html5-qrcode";
 function App() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
   const [scannerRunning, setScannerRunning] = useState(false);
   const scannerRef = useRef(null);
 
@@ -51,15 +52,14 @@ function App() {
 
   useEffect(() => {
     startScanner();
-
     return () => {
       stopScanner();
     };
   }, []);
 
   const handleSubmit = async () => {
-    if (!productId || !quantity) {
-      alert("⚠️ Please enter both product ID and quantity.");
+    if (!productId || !quantity || !sellingPrice) {
+      alert("⚠️ Please enter all required fields: product ID, quantity, and selling price.");
       return;
     }
 
@@ -67,13 +67,18 @@ function App() {
       const res = await fetch("https://your-backend.com/api/purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, quantity: parseInt(quantity) }),
+        body: JSON.stringify({
+          productId,
+          quantity: parseInt(quantity),
+          sellingPrice: parseFloat(sellingPrice),
+        }),
       });
 
       if (res.ok) {
         alert("✅ Purchase recorded successfully.");
         setProductId("");
         setQuantity("");
+        setSellingPrice("");
         startScanner(); // Restart scanner after successful submission
       } else {
         alert("❌ Failed to submit purchase.");
@@ -91,13 +96,24 @@ function App() {
       {productId && (
         <div>
           <p>✅ Product Scanned: <strong>{productId}</strong></p>
+
           <input
             type="number"
             placeholder="Enter quantity"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-          />
-          <br /><br />
+            min={1}
+          /><br /><br />
+
+          <input
+            type="number"
+            placeholder="Enter selling price (per unit)"
+            value={sellingPrice}
+            onChange={(e) => setSellingPrice(e.target.value)}
+            step="0.01"
+            min={0}
+          /><br /><br />
+
           <button onClick={handleSubmit}>Submit Purchase</button>
         </div>
       )}
